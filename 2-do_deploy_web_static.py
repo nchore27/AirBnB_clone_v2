@@ -1,39 +1,30 @@
 #!/usr/bin/python3
 """
-    Distributes an archive to your web servers,
-    using the function do_deploy
-    def do_deploy(archive_path):
-    Return False iff archive path doesn't exist
+script that distributes archive to webservers
 """
-
-from fabric.api import put, run, env
-from os.path import exists
-env.hosts = ['3.229.113.167', '3.234.210.158']
-env.user = 'ubuntu'
-env.identity = '~/.ssh/school'
-env.password = None
+import os.path
+from fabric.api import *
+from fabric.operations import run, put, sudo
+env.hosts = ['52.90.98.156', '52.207.85.204']
 
 
 def do_deploy(archive_path):
-    """
-    Deploys an archive to a server
-    """
-    if exists(archive_path) is False:
+    """ deploy """
+    if (os.path.isfile(archive_path) is False):
         return False
+
     try:
-        file_N = archive_path.split("/")[-1]
-        n = file_N.split(".")[0]
-        path = "/data/web_static/releases/"
-        put(archive_path, '/tmp/')
-        run('mkdir -p {}{}/'.format(path, n))
-        run('tar -xzf /tmp/{} -C {}{}/'.format(file_N, path, n))
-        run('rm /tmp/{}'.format(file_N))
-        run('mv {0}{1}/web_static/* {0}{1}/'.format(path, n))
-        run('rm -rf {}{}/web_static'.format(path, n))
-        run('rm -rf /data/web_static/current')
-        run('ln -s {}{}/ /data/web_static/current'.format(path, n))
-        run('chmod -R 755 /data/')
-        print("New version deployed!")
+        new_comp = archive_path.split("/")[-1]
+        new_folder = ("/data/web_static/releases/" + new_comp.split(".")[0])
+        put(archive_path, "/tmp/")
+        run("sudo mkdir -p {}".format(new_folder))
+        run("sudo tar -xzf /tmp/{} -C {}".
+            format(new_comp, new_folder))
+        run("sudo rm /tmp/{}".format(new_comp))
+        run("sudo mv {}/web_static/* {}/".format(new_folder, new_folder))
+        run("sudo rm -rf {}/web_static".format(new_folder))
+        run('sudo rm -rf /data/web_static/current')
+        run("sudo ln -s {} /data/web_static/current".format(new_folder))
         return True
-    except FileNotFoundError:
+    except:
         return False
